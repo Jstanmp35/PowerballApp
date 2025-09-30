@@ -2,30 +2,18 @@ import streamlit as st
 import pandas as pd
 import random
 
-st.set_page_config(page_title="Powerball Generator", layout="centered")
-st.title("Powerball Number Generator (Excel-Style Display)")
+# --- Page setup ---
+st.set_page_config(page_title="Powerball Number Generator", layout="centered")
+st.title("Powerball Number Generator")
 
-# Load historical data
-def load_data():
-    try:
-        df = pd.read_csv("powerball_all.csv")
-        # Detect white ball columns automatically
-        white_cols = [col for col in df.columns if "Bal" in col or "White" in col]
-        return df, white_cols
-    except Exception as e:
-        st.error(f"Error loading data: {e}")
-        st.stop()
-
-df, white_cols = load_data()
-
-# Number of combinations to generate
+# --- Number of combinations ---
 num_combos = st.number_input(
     "Number of combinations to generate:", 
     min_value=1, max_value=50, value=10, step=1
 )
 
+# --- Generate Powerball combinations ---
 def generate_unique_combos(num_combos):
-    """Generate Powerball combinations with no repeated white balls across all combos."""
     used_whites = set()
     combos = []
     attempts = 0
@@ -43,6 +31,7 @@ def generate_unique_combos(num_combos):
         st.warning("Could not generate all unique combos without repeating white balls.")
     return combos
 
+# --- Generate button ---
 if st.button("Generate Combinations"):
     top_combos = generate_unique_combos(num_combos)
     
@@ -50,21 +39,23 @@ if st.button("Generate Combinations"):
         top_combos, 
         columns=['White1','White2','White3','White4','White5','Powerball']
     )
-    # Reset index to avoid index column in display
+
+    # Remove index completely
     combos_df.reset_index(drop=True, inplace=True)
 
     st.subheader(f"Generated {len(top_combos)} Powerball Combinations")
 
-    # Excel-style display (centered, no index)
+    # --- Excel-like display ---
     st.dataframe(
-        combos_df.style.set_properties(**{
+        combos_df.style
+        .set_properties(**{
             'text-align': 'center',
             'border': '1px solid black'
-        }), 
-        height=400
+        })
+        .hide(axis="index")  # hides the index completely
     )
 
-    # CSV download without index
+    # --- CSV download ---
     csv_data = combos_df.to_csv(index=False).encode('utf-8')
     st.download_button(
         label="Download combinations as CSV",
@@ -72,6 +63,3 @@ if st.button("Generate Combinations"):
         file_name="powerball_combinations.csv",
         mime="text/csv"
     )
-
-
-
