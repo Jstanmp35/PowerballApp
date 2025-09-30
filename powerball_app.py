@@ -1,12 +1,16 @@
 import streamlit as st
 import pandas as pd
 import random
-from powerball_ai import load_data  # assuming you already have this
 
 st.set_page_config(page_title="Powerball Number Generator", layout="centered")
 st.title("Powerball Number Generator")
 
 # Load historical data
+def load_data():
+    df = pd.read_csv("powerball_all.csv")
+    white_cols = ['Bal-1', 'Bal-2', 'Bal-3', 'Bal-4', 'Bal-5']  # adjust to match your CSV
+    return df, white_cols
+
 try:
     df, white_cols = load_data()
 except Exception as e:
@@ -46,13 +50,16 @@ if st.button("Generate Combinations"):
         columns=['White1','White2','White3','White4','White5','Powerball']
     )
 
-    # Console print without index
-    print(combos_df.to_string(index=False))
+    # Reset index to avoid index column in display
+    combos_df.reset_index(drop=True, inplace=True)
 
     st.subheader(f"Generated {len(top_combos)} Powerball Combinations")
 
-    # Streamlit display without index numbers
-    st.dataframe(combos_df.style.hide(axis="index"), height=400)
+    # Excel-style display without index
+    st.dataframe(
+        combos_df.style.set_properties(**{'text-align': 'center', 'border': '1px solid black'}).hide(axis='index'),
+        height=400
+    )
 
     # CSV download without index
     csv_data = combos_df.to_csv(index=False).encode('utf-8')
@@ -62,3 +69,4 @@ if st.button("Generate Combinations"):
         file_name="powerball_combinations.csv",
         mime="text/csv"
     )
+
