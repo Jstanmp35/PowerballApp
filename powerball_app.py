@@ -25,10 +25,8 @@ def most_common_numbers(df, white_cols, top_n=5):
     counts = pd.Series(numbers).value_counts()
     return counts.head(top_n)
 
-# Load data
 df, white_cols = load_data()
 
-# Display top 5 most common white balls
 st.subheader("Top 5 Most Common Historical White Balls")
 st.write(most_common_numbers(df, white_cols, top_n=5))
 
@@ -55,8 +53,8 @@ if st.button("Generate Combinations"):
         columns=['White1', 'White2', 'White3', 'White4', 'White5', 'Powerball']
     )
 
-    # Display table without index
     st.subheader(f"Generated {len(combos_df)} Powerball Combinations")
+    # Display table without index
     st.dataframe(
         combos_df.style.set_properties(**{'text-align': 'center'}), 
         height=400
@@ -70,3 +68,4 @@ if st.button("Generate Combinations"):
         file_name="powerball_combinations.csv",
         mime="text/csv"
     )
+
