@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import qrcode
 from io import BytesIO
 from st_aggrid import AgGrid
 
@@ -8,8 +7,6 @@ from st_aggrid import AgGrid
 # App Config
 # ------------------------
 st.set_page_config(page_title="Powerball Generator", layout="wide")
-
-APP_URL = "https://powerballapp.streamlit.app"  # <-- your Streamlit public URL
 
 # ------------------------
 # Example Data (replace with your logic)
@@ -35,19 +32,6 @@ st.dataframe(combos_df.reset_index(drop=True), use_container_width=True)
 # ------------------------
 st.subheader("Interactive Table")
 AgGrid(combos_df)
-
-# ------------------------
-# QR Code for App
-# ------------------------
-st.subheader("Scan QR Code to open on your phone")
-qr = qrcode.QRCode(box_size=8, border=2)
-qr.add_data(APP_URL)
-qr.make(fit=True)
-
-img = qr.make_image(fill_color="black", back_color="white")
-buf = BytesIO()
-img.save(buf, format="PNG")
-st.image(buf.getvalue(), caption="Scan to open app", use_container_width=True)
 
 # ------------------------
 # Download as Excel
