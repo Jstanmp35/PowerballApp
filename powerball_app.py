@@ -40,20 +40,9 @@ if st.button("Generate Combinations"):
         columns=['White1','White2','White3','White4','White5','Powerball']
     )
 
-    # Remove index completely
-    combos_df.reset_index(drop=True, inplace=True)
-
+    # --- Display table without index numbers ---
     st.subheader(f"Generated {len(top_combos)} Powerball Combinations")
-
-    # --- Excel-like display ---
-    st.dataframe(
-        combos_df.style
-        .set_properties(**{
-            'text-align': 'center',
-            'border': '1px solid black'
-        })
-        .hide(axis="index")  # hides the index completely
-    )
+    st.table(combos_df)  # st.table automatically hides the index
 
     # --- CSV download ---
     csv_data = combos_df.to_csv(index=False).encode('utf-8')
