@@ -1,30 +1,26 @@
 import streamlit as st
+from powerball_ai import load_data
 import pandas as pd
 import random
 
 st.set_page_config(page_title="Powerball Number Generator", layout="centered")
 st.title("Powerball Number Generator")
 
-# --- Load historical data ---
-def load_data():
-    df = pd.read_csv("powerball_all.csv")  # Make sure this CSV exists
-    white_cols = ['White1','White2','White3','White4','White5']
-    return df, white_cols
-
+# Load historical data
 try:
     df, white_cols = load_data()
 except Exception as e:
     st.error(f"Error loading data: {e}")
     st.stop()
 
-# --- Number of combinations to generate ---
+# Number of combinations to generate
 num_combos = st.number_input(
     "Number of combinations to generate:", 
     min_value=1, max_value=50, value=10, step=1
 )
 
-# --- Generate Powerball combinations ---
 def generate_unique_combos(num_combos):
+    """Generate Powerball combinations with no repeated white balls across all combos."""
     used_whites = set()
     combos = []
     attempts = 0
@@ -50,11 +46,11 @@ if st.button("Generate Combinations"):
         columns=['White1','White2','White3','White4','White5','Powerball']
     )
 
-    # --- Display combinations WITHOUT index numbers ---
+    # Display the DataFrame without index numbers
     st.subheader(f"Generated {len(top_combos)} Powerball Combinations")
-    st.table(combos_df.to_dict(orient="records"))
+    st.table(combos_df.to_dict(orient="records"))  # <-- index-free display
 
-    # --- CSV download ---
+    # CSV download
     csv_data = combos_df.to_csv(index=False).encode('utf-8')
     st.download_button(
         label="Download combinations as CSV",
@@ -62,4 +58,5 @@ if st.button("Generate Combinations"):
         file_name="powerball_combinations.csv",
         mime="text/csv"
     )
+
 
