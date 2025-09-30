@@ -1,33 +1,44 @@
 import streamlit as st
 import pandas as pd
 import random
-from io import BytesIO
 import qrcode
 from PIL import Image
-from powerball_ai import load_data, most_common_numbers
+import io
 
-# --- Page Setup ---
 st.set_page_config(page_title="Powerball Generator", layout="centered")
 st.title("Powerball Number Generator (Excel-Style Display)")
 
-# --- Load Historical Data ---
+# --- Generate historical data (dummy loader) ---
+def load_data():
+    # Replace with your CSV loading if needed
+    # df = pd.read_csv("powerball_all.csv")
+    df = pd.DataFrame({
+        'White1': [], 'White2': [], 'White3': [], 'White4': [], 'White5': [], 'Powerball': []
+    })
+    white_cols = ['White1','White2','White3','White4','White5']
+    return df, white_cols
+
+def most_common_numbers(df, white_cols, top_n=5):
+    # Dummy historical analysis
+    return pd.Series([1,2,3,4,5], index=white_cols[:top_n])
+
+# Load historical data
 try:
     df, white_cols = load_data()
 except Exception as e:
     st.error(f"Error loading data: {e}")
     st.stop()
 
-# --- Display Top 5 Historical White Balls ---
 st.subheader("Top 5 Most Common Historical White Balls")
-st.table(most_common_numbers(df, white_cols, top_n=5))
+st.write(most_common_numbers(df, white_cols, top_n=5))
 
-# --- Number of Combinations Input ---
+# --- Number of combinations ---
 num_combos = st.number_input(
     "Number of combinations to generate:", 
     min_value=1, max_value=50, value=10, step=1
 )
 
-# --- Generate Unique Powerball Combinations ---
+# --- Generate Powerball combos ---
 def generate_unique_combos(num_combos):
     used_whites = set()
     combos = []
@@ -46,7 +57,6 @@ def generate_unique_combos(num_combos):
         st.warning("Could not generate all unique combos without repeating white balls.")
     return combos
 
-# --- Generate Button ---
 if st.button("Generate Combinations"):
     top_combos = generate_unique_combos(num_combos)
     
@@ -56,32 +66,13 @@ if st.button("Generate Combinations"):
     )
     combos_df.reset_index(drop=True, inplace=True)
 
-    # --- Excel-style Styling with Alternating Row Colors ---
-    def excel_style(val):
-        return 'text-align: center; border: 1px solid #d3d3d3; padding: 5px;'
-
-    row_colors = [
-        {'selector': f'tr:nth-child({i+2})',
-         'props': [('background-color', '#f9f9f9')]} if i % 2 == 0 else
-        {'selector': f'tr:nth-child({i+2})',
-         'props': [('background-color', 'white')]} 
-        for i in range(len(combos_df))
-    ]
-
-    styled_df = combos_df.style.set_table_styles(
-        [
-            {'selector': 'th', 
-             'props': [('text-align', 'center'),
-                       ('background-color', '#f0f0f0'),
-                       ('border', '1px solid #d3d3d3'),
-                       ('padding', '5px')]}
-        ] + row_colors
-    ).applymap(excel_style)
-
+    # Excel-style display
     st.subheader(f"Generated {len(top_combos)} Powerball Combinations")
-    st.dataframe(styled_df, height=400, use_container_width=True)
+    st.dataframe(combos_df.style.set_properties(
+        **{'text-align': 'center', 'border': '1px solid black'}
+    ), height=400)
 
-    # --- CSV Download ---
+    # CSV download
     csv_data = combos_df.to_csv(index=False).encode('utf-8')
     st.download_button(
         label="Download combinations as CSV",
@@ -90,35 +81,15 @@ if st.button("Generate Combinations"):
         mime="text/csv"
     )
 
-    # --- Excel Download ---
-    try:
-        excel_file = BytesIO()
-        combos_df.to_excel(excel_file, index=False, sheet_name='Powerball')
-        st.download_button(
-            label="Download combinations as Excel",
-            data=excel_file.getvalue(),
-            file_name="powerball_combinations.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
-    except ImportError:
-        st.warning("Excel download requires 'openpyxl'. Make sure it's in requirements.txt")
+    # --- QR Code for mobile ---
+    APP_URL = "https://share.streamlit.io/Jstanmp35/PowerballApp/main/powerball_app.py"
+    qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=4)
+    qr.add_data(APP_URL)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="black", back_color="white")
 
-# --- QR Code Section ---
-st.subheader("Open this app on your phone")
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    buf.seek(0)
 
-# Replace this with your actual deployed Streamlit app URL
-app_url = "https://share.streamlit.io/Jstanmp35/PowerballApp/main/powerball_app.py"
-
-# Generate QR code
-qr = qrcode.QRCode(
-    version=1,
-    error_correction=qrcode.constants.ERROR_CORRECT_H,
-    box_size=8,
-    border=4,
-)
-qr.add_data(app_url)
-qr.make(fit=True)
-
-img = qr.make_image(fill_color="black", back_color="white")
-st.image(img, caption="Scan to open Powerball Generator on your phone", use_column_width=False)
-st.markdown(f"[Or click here to open the app]({app_url})")
+    st.image(buf, caption="Scan to open Powerball Generator on your phone", use_container_width=True)
