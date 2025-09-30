@@ -42,7 +42,11 @@ if st.button("Generate Combinations"):
 
     # --- Display table without index numbers ---
     st.subheader(f"Generated {len(top_combos)} Powerball Combinations")
-    st.table(combos_df)  # st.table automatically hides the index
+    
+    # Convert to list of lists for display without index
+    st.write(
+        pd.DataFrame(top_combos, columns=['White1','White2','White3','White4','White5','Powerball']).to_string(index=False)
+    )
 
     # --- CSV download ---
     csv_data = combos_df.to_csv(index=False).encode('utf-8')
