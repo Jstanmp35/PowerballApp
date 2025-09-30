@@ -1,5 +1,4 @@
 import streamlit as st
-from powerball_ai import load_data
 import pandas as pd
 import random
 
@@ -7,11 +6,17 @@ st.set_page_config(page_title="Powerball Generator", layout="centered")
 st.title("Powerball Number Generator (Excel-Style Display)")
 
 # Load historical data
-try:
-    df, white_cols = load_data()
-except Exception as e:
-    st.error(f"Error loading data: {e}")
-    st.stop()
+def load_data():
+    try:
+        df = pd.read_csv("powerball_all.csv")
+        # Detect white ball columns automatically
+        white_cols = [col for col in df.columns if "Bal" in col or "White" in col]
+        return df, white_cols
+    except Exception as e:
+        st.error(f"Error loading data: {e}")
+        st.stop()
+
+df, white_cols = load_data()
 
 # Number of combinations to generate
 num_combos = st.number_input(
@@ -45,16 +50,19 @@ if st.button("Generate Combinations"):
         top_combos, 
         columns=['White1','White2','White3','White4','White5','Powerball']
     )
-    
-    # Reset index to avoid showing index column
-    combos_df.index = [''] * len(combos_df)
+    # Reset index to avoid index column in display
+    combos_df.reset_index(drop=True, inplace=True)
 
-    # Display nicely in Streamlit
     st.subheader(f"Generated {len(top_combos)} Powerball Combinations")
-    st.dataframe(combos_df.style.set_properties(**{
-        'text-align': 'center',
-        'border': '1px solid black'
-    }), height=400)
+
+    # Excel-style display (centered, no index)
+    st.dataframe(
+        combos_df.style.set_properties(**{
+            'text-align': 'center',
+            'border': '1px solid black'
+        }), 
+        height=400
+    )
 
     # CSV download without index
     csv_data = combos_df.to_csv(index=False).encode('utf-8')
@@ -64,5 +72,6 @@ if st.button("Generate Combinations"):
         file_name="powerball_combinations.csv",
         mime="text/csv"
     )
+
 
 
