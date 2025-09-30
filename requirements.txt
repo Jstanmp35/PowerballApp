@@ -1,5 +1,4 @@
-pandas
 streamlit
-streamlit-aggrid
-qrcode
+pandas
 openpyxl
+streamlit-aggrid
