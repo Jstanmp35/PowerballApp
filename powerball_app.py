@@ -1,19 +1,26 @@
 import streamlit as st
 import pandas as pd
 import random
+from powerball_ai import load_data  # assuming you already have this
 
-# --- Page setup ---
 st.set_page_config(page_title="Powerball Number Generator", layout="centered")
 st.title("Powerball Number Generator")
 
-# --- Number of combinations ---
+# Load historical data
+try:
+    df, white_cols = load_data()
+except Exception as e:
+    st.error(f"Error loading data: {e}")
+    st.stop()
+
+# Number of combinations to generate
 num_combos = st.number_input(
     "Number of combinations to generate:", 
     min_value=1, max_value=50, value=10, step=1
 )
 
-# --- Generate Powerball combinations ---
 def generate_unique_combos(num_combos):
+    """Generate Powerball combinations with no repeated white balls across all combos."""
     used_whites = set()
     combos = []
     attempts = 0
@@ -31,7 +38,6 @@ def generate_unique_combos(num_combos):
         st.warning("Could not generate all unique combos without repeating white balls.")
     return combos
 
-# --- Generate button ---
 if st.button("Generate Combinations"):
     top_combos = generate_unique_combos(num_combos)
     
@@ -40,15 +46,15 @@ if st.button("Generate Combinations"):
         columns=['White1','White2','White3','White4','White5','Powerball']
     )
 
-    # --- Display table without index numbers ---
-    st.subheader(f"Generated {len(top_combos)} Powerball Combinations")
-    
-    # Convert to list of lists for display without index
-    st.write(
-        pd.DataFrame(top_combos, columns=['White1','White2','White3','White4','White5','Powerball']).to_string(index=False)
-    )
+    # Console print without index
+    print(combos_df.to_string(index=False))
 
-    # --- CSV download ---
+    st.subheader(f"Generated {len(top_combos)} Powerball Combinations")
+
+    # Streamlit display without index numbers
+    st.dataframe(combos_df.style.hide(axis="index"), height=400)
+
+    # CSV download without index
     csv_data = combos_df.to_csv(index=False).encode('utf-8')
     st.download_button(
         label="Download combinations as CSV",
