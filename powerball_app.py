@@ -5,15 +5,25 @@ import random
 st.set_page_config(page_title="Powerball Number Generator", layout="centered")
 st.title("Powerball Number Generator")
 
-# Load historical data
+# --- Load historical data ---
 def load_data():
-    # Adjust this path to your CSV file
-    df = pd.read_csv("powerball_all.csv")
-    # Define white ball columns
+    df = pd.read_csv("powerball_all.csv")  # Make sure this CSV exists
     white_cols = ['White1','White2','White3','White4','White5']
     return df, white_cols
 
-# Generate combinations
+try:
+    df, white_cols = load_data()
+except Exception as e:
+    st.error(f"Error loading data: {e}")
+    st.stop()
+
+# --- Number of combinations to generate ---
+num_combos = st.number_input(
+    "Number of combinations to generate:", 
+    min_value=1, max_value=50, value=10, step=1
+)
+
+# --- Generate Powerball combinations ---
 def generate_unique_combos(num_combos):
     used_whites = set()
     combos = []
@@ -32,25 +42,19 @@ def generate_unique_combos(num_combos):
         st.warning("Could not generate all unique combos without repeating white balls.")
     return combos
 
-# Input: number of combinations
-num_combos = st.number_input(
-    "Number of combinations to generate:", 
-    min_value=1, max_value=50, value=10, step=1
-)
-
 if st.button("Generate Combinations"):
     top_combos = generate_unique_combos(num_combos)
-
+    
     combos_df = pd.DataFrame(
         top_combos, 
         columns=['White1','White2','White3','White4','White5','Powerball']
     )
 
-    # Display **without index**
+    # --- Display combinations WITHOUT index numbers ---
     st.subheader(f"Generated {len(top_combos)} Powerball Combinations")
     st.table(combos_df.to_dict(orient="records"))
 
-    # CSV download without index
+    # --- CSV download ---
     csv_data = combos_df.to_csv(index=False).encode('utf-8')
     st.download_button(
         label="Download combinations as CSV",
@@ -58,3 +62,4 @@ if st.button("Generate Combinations"):
         file_name="powerball_combinations.csv",
         mime="text/csv"
     )
+
