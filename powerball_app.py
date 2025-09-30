@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import random
 from io import BytesIO
 from st_aggrid import AgGrid
 
@@ -9,17 +10,28 @@ from st_aggrid import AgGrid
 st.set_page_config(page_title="Powerball Generator", layout="wide")
 
 # ------------------------
-# Example Data (replace with your logic)
+# Generate Powerball Numbers
 # ------------------------
-data = {
-    "Ball-1": [5, 10, 20],
-    "Ball-2": [12, 14, 22],
-    "Ball-3": [23, 25, 30],
-    "Ball-4": [33, 36, 40],
-    "Ball-5": [45, 48, 50],
-    "Powerball": [12, 18, 25]
-}
-combos_df = pd.DataFrame(data)
+def generate_combinations(n=10):
+    combos = []
+    for _ in range(n):
+        white_balls = random.sample(range(1, 70), 5)  # 5 unique numbers 1–69
+        white_balls.sort()
+        powerball = random.randint(1, 26)  # 1 number 1–26
+        combos.append(white_balls + [powerball])
+    df = pd.DataFrame(combos, columns=["White1", "White2", "White3", "White4", "White5", "Powerball"])
+    return df
+
+# ------------------------
+# User Input
+# ------------------------
+st.title("🎰 Powerball Number Generator")
+num_combos = st.slider("How many combinations?", 5, 50, 10)
+
+# ------------------------
+# Generate Data
+# ------------------------
+combos_df = generate_combinations(num_combos)
 
 # ------------------------
 # Show Table without Index
@@ -39,7 +51,7 @@ AgGrid(combos_df)
 excel_file = BytesIO()
 combos_df.to_excel(excel_file, index=False, sheet_name="Powerball")
 st.download_button(
-    label="Download as Excel",
+    label="📥 Download as Excel",
     data=excel_file,
     file_name="powerball_combos.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
